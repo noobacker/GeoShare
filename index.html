@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Save Location</title>
+
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        margin: 0;
+        background-color: #f4f4f4;
+      }
+
+      .container {
+        text-align: center;
+      }
+
+      input[type="text"] {
+        width: 300px;
+        padding: 10px;
+        margin-top: 20px;
+        font-size: 16px;
+      }
+
+      button {
+        padding: 10px 20px;
+        font-size: 16px;
+        color: #fff;
+        background-color: #007bff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-top: 10px;
+      }
+
+      button:hover {
+        background-color: #0056b3;
+      }
+
+      .map-box {
+        width: 300px;
+        height: 200px;
+        margin-top: 20px;
+        border: 2px solid #007bff;
+        display: none;
+        cursor: pointer;
+        background: url("https://via.placeholder.com/300x200?text=Click+to+Open+Map")
+          center/cover no-repeat;
+      }
+
+      .map-box.active {
+        display: block;
+      }
+
+      .details {
+        margin-top: 20px;
+        font-size: 16px;
+        text-align: left;
+      }
+
+      .details p {
+        margin: 5px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Get Current Location</h1>
+      <button id="getLocationButton">Get Location</button>
+      <input
+        type="text"
+        id="locationTextbox"
+        readonly
+        placeholder="Google Maps link will appear here"
+      />
+      <div id="mapBox" class="map-box"></div>
+      <div class="details">
+        <p><strong>Latitude:</strong> <span id="latitude">-</span></p>
+        <p><strong>Longitude:</strong> <span id="longitude">-</span></p>
+        <p>
+          <strong>Address:</strong>
+          <span id="address">Fetching address...</span>
+        </p>
+      </div>
+    </div>
+
+    <script>
+      const button = document.getElementById("getLocationButton");
+      const textbox = document.getElementById("locationTextbox");
+      const mapBox = document.getElementById("mapBox");
+      const latitudeSpan = document.getElementById("latitude");
+      const longitudeSpan = document.getElementById("longitude");
+      const addressSpan = document.getElementById("address");
+
+      button.addEventListener("click", () => {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              const latitude = position.coords.latitude;
+              const longitude = position.coords.longitude;
+              const googleMapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
+
+              // Update latitude, longitude, and map preview
+              latitudeSpan.textContent = latitude.toFixed(6);
+              longitudeSpan.textContent = longitude.toFixed(6);
+              textbox.value = googleMapsLink;
+
+              mapBox.classList.add("active");
+              mapBox.onclick = () => {
+                window.open(googleMapsLink, "_blank");
+              };
+
+              // Fetch address using Nominatim API
+              fetch(
+                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+              )
+                .then((response) => response.json())
+                .then((data) => {
+                  if (data && data.display_name) {
+                    addressSpan.textContent = data.display_name;
+                  } else {
+                    addressSpan.textContent = "Address not found.";
+                  }
+                })
+                .catch((error) => {
+                  console.error("Error fetching address:", error);
+                  addressSpan.textContent = "Error fetching address.";
+                });
+            },
+            (error) => {
+              switch (error.code) {
+                case error.PERMISSION_DENIED:
+                  alert("User denied the request for Geolocation.");
+                  break;
+                case error.POSITION_UNAVAILABLE:
+                  alert("Location information is unavailable.");
+                  break;
+                case error.TIMEOUT:
+                  alert("The request to get user location timed out.");
+                  break;
+                case error.UNKNOWN_ERROR:
+                  alert("An unknown error occurred.");
+                  break;
+              }
+            }
+          );
+        } else {
+          alert("Geolocation is not supported by this browser.");
+        }
+      });
+    </script>
+  </body>
+</html>
