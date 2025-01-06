@@ -9,6 +9,11 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css"
     />
+    <!-- Add Font Awesome for icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -18,7 +23,7 @@
         min-height: 100vh;
         display: flex;
         flex-direction: column;
-        overflow: hidden; /* Prevent scrolling */
+        overflow: hidden;
       }
 
       .main-content {
@@ -155,6 +160,35 @@
         text-decoration: underline;
       }
 
+      .share {
+        margin-top: 20px;
+        text-align: center;
+        display: none; /* Hide share section by default */
+      }
+
+      .share.active {
+        display: block;
+      }
+
+      .share a {
+        margin: 5px;
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        display: inline-block;
+        min-width: 44px;
+      }
+
+      .share a:hover {
+        background-color: #0056b3;
+      }
+
+      .share a i {
+        font-size: 1.2em;
+      }
+
       @keyframes spin {
         0% {
           transform: rotate(0deg);
@@ -214,6 +248,24 @@
           <p><strong>Longitude:</strong> <span id="longitude">-</span></p>
           <p><strong>Address:</strong> <span id="address">-</span></p>
         </div>
+        <div class="share" id="shareSection">
+          <p>Share via:</p>
+          <a href="javascript:void(0);" onclick="shareLocation('copy')"
+            ><i class="fas fa-copy"></i
+          ></a>
+          <a href="javascript:void(0);" onclick="shareLocation('whatsapp')"
+            ><i class="fab fa-whatsapp"></i
+          ></a>
+          <a href="javascript:void(0);" onclick="shareLocation('facebook')"
+            ><i class="fab fa-facebook-f"></i
+          ></a>
+          <a href="javascript:void(0);" onclick="shareLocation('sms')"
+            ><i class="fas fa-sms"></i
+          ></a>
+          <a href="javascript:void(0);" onclick="shareLocation('email')"
+            ><i class="fas fa-envelope"></i
+          ></a>
+        </div>
       </div>
     </div>
     <div class="footer">
@@ -238,6 +290,7 @@
       const longitudeSpan = document.getElementById("longitude");
       const addressSpan = document.getElementById("address");
       const loadingSpinner = document.getElementById("loadingSpinner");
+      const shareSection = document.getElementById("shareSection");
 
       let map;
       let marker;
@@ -263,6 +316,8 @@
 
       button.addEventListener("click", () => {
         loadingSpinner.classList.add("active");
+        shareSection.classList.remove("active"); // Hide share section
+
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(
             (position) => {
@@ -270,15 +325,12 @@
               const longitude = position.coords.longitude;
               const googleMapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
 
-              // Update latitude, longitude, and map
               latitudeSpan.textContent = latitude.toFixed(6);
               longitudeSpan.textContent = longitude.toFixed(6);
               textbox.value = googleMapsLink;
 
-              // Initialize map with user's location
               initMap(latitude, longitude);
 
-              // Fetch address using Nominatim API
               fetch(
                 `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
               )
@@ -290,29 +342,18 @@
                   } else {
                     addressSpan.textContent = "Address not found.";
                   }
+                  shareSection.classList.add("active"); // Show share section
                 })
                 .catch((error) => {
                   loadingSpinner.classList.remove("active");
                   console.error("Error fetching address:", error);
                   addressSpan.textContent = "Error fetching address.";
+                  shareSection.classList.add("active"); // Show share section
                 });
             },
             (error) => {
               loadingSpinner.classList.remove("active");
-              switch (error.code) {
-                case error.PERMISSION_DENIED:
-                  alert("User denied the request for Geolocation.");
-                  break;
-                case error.POSITION_UNAVAILABLE:
-                  alert("Location information is unavailable.");
-                  break;
-                case error.TIMEOUT:
-                  alert("The request to get user location timed out.");
-                  break;
-                case error.UNKNOWN_ERROR:
-                  alert("An unknown error occurred.");
-                  break;
-              }
+              handleGeolocationError(error);
             }
           );
         } else {
@@ -321,14 +362,61 @@
         }
       });
 
-      // Make the map clickable to open Google Maps
-      mapDiv.onclick = () => {
-        if (marker) {
-          const lat = marker.getLatLng().lat;
-          const lng = marker.getLatLng().lng;
-          window.open(`https://www.google.com/maps?q=${lat},${lng}`, "_blank");
+      function shareLocation(platform) {
+        const latitude = latitudeSpan.textContent;
+        const longitude = longitudeSpan.textContent;
+        const address = addressSpan.textContent;
+        const googleMapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
+
+        const shareText = `Current Location: ${googleMapsLink}\nAddress: ${address}\nLatitude: ${latitude}\nLongitude: ${longitude}`;
+
+        switch (platform) {
+          case "copy":
+            navigator.clipboard
+              .writeText(shareText)
+              .then(() => alert("Location details copied to clipboard!"))
+              .catch((error) => console.error("Error copying text: ", error));
+            break;
+          case "whatsapp":
+            window.location.href = `whatsapp://send?text=${encodeURIComponent(
+              shareText
+            )}`;
+            break;
+          case "facebook":
+            window.open(
+              `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+                googleMapsLink
+              )}&quote=${encodeURIComponent(shareText)}`,
+              "_blank"
+            );
+            break;
+          case "sms":
+            window.location.href = `sms:?body=${encodeURIComponent(shareText)}`;
+            break;
+          case "email":
+            window.location.href = `mailto:?subject=My Current Location&body=${encodeURIComponent(
+              shareText
+            )}`;
+            break;
         }
-      };
+      }
+
+      function handleGeolocationError(error) {
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            alert("User denied the request for Geolocation.");
+            break;
+          case error.POSITION_UNAVAILABLE:
+            alert("Location information is unavailable.");
+            break;
+          case error.TIMEOUT:
+            alert("The request to get user location timed out.");
+            break;
+          case error.UNKNOWN_ERROR:
+            alert("An unknown error occurred.");
+            break;
+        }
+      }
     </script>
   </body>
 </html>
