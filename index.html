@@ -1,19 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      charset="<meta"
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
     <title>Save Location</title>
-    <!-- Add Leaflet CSS -->
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css"
     />
-    <!-- Add Font Awesome for icons -->
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
     />
+    <!-- //  Made by Harshal Pimpalshende
+    // https://github.com/noobacker -->
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -23,9 +26,10 @@
         min-height: 100vh;
         display: flex;
         flex-direction: column;
-        overflow: hidden;
+        /* Removed overflow: hidden */
       }
 
+      /* Rest of the CSS remains exactly the same */
       .main-content {
         flex: 1;
         display: flex;
@@ -163,7 +167,7 @@
       .share {
         margin-top: 20px;
         text-align: center;
-        display: none; /* Hide share section by default */
+        display: none;
       }
 
       .share.active {
@@ -270,8 +274,8 @@
     </div>
     <div class="footer">
       <p>
-        Made with <span class="heart">&#10084;&#65039;</span> love by Harshal
-        Pimpalshende
+        Made with <span class="heart">&#10084;&#65039;</span> by Harshal
+        Pimpalshende.
       </p>
       <p>
         GitHub:
@@ -279,7 +283,6 @@
       </p>
     </div>
 
-    <!-- Add Leaflet JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
     <script>
       const button = document.getElementById("getLocationButton");
@@ -316,7 +319,7 @@
 
       button.addEventListener("click", () => {
         loadingSpinner.classList.add("active");
-        shareSection.classList.remove("active"); // Hide share section
+        shareSection.classList.remove("active");
 
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(
@@ -342,13 +345,13 @@
                   } else {
                     addressSpan.textContent = "Address not found.";
                   }
-                  shareSection.classList.add("active"); // Show share section
+                  shareSection.classList.add("active");
                 })
                 .catch((error) => {
                   loadingSpinner.classList.remove("active");
                   console.error("Error fetching address:", error);
                   addressSpan.textContent = "Error fetching address.";
-                  shareSection.classList.add("active"); // Show share section
+                  shareSection.classList.add("active");
                 });
             },
             (error) => {
@@ -361,7 +364,8 @@
           alert("Geolocation is not supported by this browser.");
         }
       });
-
+      //  Made by Harshal Pimpalshende
+      // https://github.com/noobacker
       function shareLocation(platform) {
         const latitude = latitudeSpan.textContent;
         const longitude = longitudeSpan.textContent;
